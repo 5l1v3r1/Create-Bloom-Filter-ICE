@@ -4,15 +4,14 @@
 """
 @author: Noname400
 """
-version = '3.15 09.01.23'
+version = '3.17 10.01.23'
 
 from sys import argv
 from os import system, path, name, mkdir
 from time import time
 from datetime import datetime
-from lib.secp256k1_lib import dump_bloom_file, Fill_in_bloom
+from lib.secp256k1_lib import dump_bloom_file, Fill_in_bloom, b58_decode, bech32_address_decode
 from cashaddress import convert
-from bitcoinlib.keys import addr_bech32_to_pubkeyhash, deserialize_address
 
 def cls():
     system('cls' if name=='nt' else 'clear')
@@ -20,6 +19,17 @@ def cls():
 def date_str():
     now = datetime.now()
     return now.strftime("%m/%d/%Y, %H:%M:%S")
+
+def norm_hash(hash):
+    res = ''
+    if len(hash) == 52:
+        res = hash[4:44]
+    elif len(hash) == 50:
+        res = hash[2:42]
+    else:
+        print(f'Error HASH:{hash}')
+        return 0
+    return res
 
 def create_bf(file_in,file_out):
     bech_ = 0
@@ -37,7 +47,7 @@ def create_bf(file_in,file_out):
     with open(file_in, "r") as f:
         for line in f:
             res = line.strip()
-            if len(res) < 26 or len(res) > 63:
+            if len(res) < 26 or len(res) > 43:
                 err += 1
             elif res[:2] == 's-' or res[:2] == 'm-' or res[:2] == 'd-':
                 err += 1
@@ -49,7 +59,7 @@ def create_bf(file_in,file_out):
                 eth_0x_ += 1
             elif (res[:4] == 'ltc1' and len(res) == 43):
                 try:
-                    h160 = addr_bech32_to_pubkeyhash(res, prefix='ltc', as_hex=True)
+                    h160 = bech32_address_decode(res, 21)
                 except:
                     cancel += 1
                     continue
@@ -58,7 +68,7 @@ def create_bf(file_in,file_out):
                     bech_ += 1
             elif (res[:3] == 'bc1' and len(res) == 42):
                 try:
-                    h160 = addr_bech32_to_pubkeyhash(res, as_hex=True)
+                    h160 = bech32_address_decode(res, 0)
                 except:
                     cancel += 1
                     continue
@@ -67,21 +77,29 @@ def create_bf(file_in,file_out):
                     bech_ += 1
             elif (res[:1] == 'q' and len(res) == 42) or res[:1] == 'p' and len(res) == 42:
                 addr_bch = convert.to_legacy_address(f'bitcoincash:{res}')
-                h160 = deserialize_address(addr_bch, encoding='base58')['public_key_hash']
-                lis.append(h160)
+                h160 = b58_decode(addr_bch)
+                res = norm_hash(h160)
+                if res == 0: 
+                    cancel += 1
+                    continue
+                lis.append(res)
                 base_ += 1
                 conv_ +=1
             elif res[:2] == 't1' or res[:2] == 't3':
-                h160 = deserialize_address(res, encoding='base58')['public_key_hash']
-                lis.append(h160[2:])
-                hash_ += 1
-            else:
-                try:
-                    h160 = deserialize_address(res, encoding='base58')['public_key_hash']
-                except:
+                h160 = b58_decode(res)
+                res = norm_hash(h160)
+                if res == 0: 
                     cancel += 1
                     continue
-                lis.append(h160)
+                lis.append(res)
+                hash_ += 1
+            else:
+                h160 = b58_decode(res)
+                res = norm_hash(h160)
+                if res == 0: 
+                    cancel += 1
+                    continue
+                lis.append(res)
                 base_ += 1
             count += 1
             if count == line_10:
@@ -92,7 +110,7 @@ def create_bf(file_in,file_out):
     
     print(f"[I] Start sorted list and add to bloom...")
     st = time()
-    lis.sort()
+    #lis.sort()
     _bits, _hashes, _bf = Fill_in_bloom(lis, 1e-14)
     dump_bloom_file(file_out, _bits, _hashes, _bf)
     print(f"[I] Finish sorted list and add to bloom: ({time()-st:.2f}) sec")

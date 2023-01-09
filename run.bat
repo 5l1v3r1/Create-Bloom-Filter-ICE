@@ -1,2 +1,2 @@
-python bloom-create.py 1.test test.bin
+python bloom-create.py btc.txt btc.bin
 pause
