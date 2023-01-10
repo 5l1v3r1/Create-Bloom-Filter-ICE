@@ -1,9 +1,12 @@
-# !/usr/bin/python3
-# encoding=utf8
+# #!/usr/bin/python3
+# encoding=utf-8
 # -*- coding: utf-8 -*-
 """
-@author: Noname400
+@author: NonameHUNT
+@GitHub: https://github.com/Noname400
+@telegram: https://t.me/NonameHunt
 """
+
 version = '3.17 10.01.23'
 
 from sys import argv
