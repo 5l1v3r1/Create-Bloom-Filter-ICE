@@ -114,7 +114,7 @@ def create_bf(file_in,file_out):
     print(f"[I] Start sorted list and add to bloom...")
     st = time()
     #lis.sort()
-    _bits, _hashes, _bf = Fill_in_bloom(lis, 1e-14)
+    _bits, _hashes, _bf = Fill_in_bloom(lis, 0.000000000000001)
     dump_bloom_file(file_out, _bits, _hashes, _bf)
     print(f"[I] Finish sorted list and add to bloom: ({time()-st:.2f}) sec")
     print(f"[I] Bloom filter saved... ({time()-st:.2f} sec)")
